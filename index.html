@@ -3,58 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Apple Event Bullshit Bingo</title>
+<title>Apple Event Bingo</title>
 <style>
   :root{
-    --bg:#f5f5f7; --card:#ffffff; --ink:#1d1d1f; --muted:#6e6e73;
-    --line:#d2d2d7; --accent:#0071e3; --hit:#1d9e75; --hit-bg:#e1f5ee;
-    --win:#bf5af2; --radius:14px;
+    --bg:#fbfbfd; --bg2:#f0f0f5; --card:rgba(255,255,255,.72); --card-solid:#ffffff;
+    --ink:#1d1d1f; --muted:#6e6e73; --line:rgba(0,0,0,.09);
+    --accent:#0071e3; --accent2:#38bdf8; --hit:#12a67a; --hit-bg:rgba(18,166,122,.12);
+    --win1:#bf5af2; --win2:#0a84ff; --shadow:0 8px 30px rgba(0,0,0,.08);
+    --radius:20px; --cell-radius:14px;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#000; --card:#1c1c1e; --ink:#f5f5f7; --muted:#98989d;
-           --line:#38383a; --hit-bg:#0f2e26; }
+    :root{
+      --bg:#000000; --bg2:#0b0b0f; --card:rgba(28,28,30,.62); --card-solid:#1c1c1e;
+      --ink:#f5f5f7; --muted:#98989d; --line:rgba(255,255,255,.10);
+      --accent:#0a84ff; --accent2:#64d2ff; --hit:#30d59a; --hit-bg:rgba(48,213,154,.14);
+      --shadow:0 8px 34px rgba(0,0,0,.55);
+    }
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding:20px;line-height:1.4;}
-  .wrap{max-width:640px;margin:0 auto;}
-  h1{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0 0 2px;}
-  .sub{color:var(--muted);font-size:14px;margin:0 0 22px;}
-  .card{background:var(--card);border:.5px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:18px;}
-  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;}
-  input{width:100%;font-size:16px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;
-    background:var(--bg);color:var(--ink);margin-bottom:14px;font-family:inherit;}
-  input:focus{outline:none;border-color:var(--accent);}
-  button{font-family:inherit;font-size:16px;font-weight:500;padding:11px 20px;border:none;border-radius:10px;
-    background:var(--accent);color:#fff;cursor:pointer;width:100%;transition:opacity .15s;}
-  button:active{opacity:.7;}
-  button:disabled{opacity:.5;cursor:default;}
-  button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line);width:auto;padding:8px 16px;font-size:14px;}
-  .err{color:#e24b4a;font-size:13px;margin:-8px 0 12px;min-height:0;}
-  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:4px;}
-  .cell{aspect-ratio:1;border:1px solid var(--line);border-radius:11px;background:var(--card);
-    display:flex;align-items:center;justify-content:center;text-align:center;
-    padding:6px;font-size:11.5px;font-weight:500;cursor:pointer;line-height:1.15;
-    transition:background .12s,border-color .12s,transform .08s;user-select:none;overflow:hidden;hyphens:auto;}
-  .cell:active{transform:scale(.95);}
-  .cell.hit{background:var(--hit-bg);border-color:var(--hit);color:var(--hit);}
-  .cell.winline{border-color:var(--win);border-width:2px;}
-  .banner{background:var(--win);color:#fff;border-radius:var(--radius);padding:16px 20px;margin-bottom:18px;
-    font-size:16px;font-weight:500;display:flex;align-items:center;gap:10px;}
-  .who{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .who .name{font-weight:600;font-size:17px;}
-  .who .cnt{color:var(--muted);font-size:13px;}
-  .board{margin-top:22px;}
-  .board h2{font-size:14px;color:var(--muted);font-weight:500;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;}
-  .row{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:.5px solid var(--line);font-size:15px;}
-  .row:last-child{border-bottom:none;}
-  .row .n{color:var(--muted);font-size:13px;}
-  .row.winner .name{color:var(--win);font-weight:600;}
-  .hint{color:var(--muted);font-size:12px;text-align:center;margin-top:14px;}
-  .loading{text-align:center;color:var(--muted);padding:30px;}
-  .status{font-size:11px;text-align:center;margin-top:8px;}
+  html,body{margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    padding:26px 18px 60px;min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(120,80,255,.14), transparent 60%),
+      radial-gradient(1000px 560px at 110% 10%, rgba(10,132,255,.16), transparent 55%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    background-attachment:fixed;
+  }
+  .wrap{max-width:660px;margin:0 auto;}
+
+  .masthead{text-align:center;margin:6px 0 26px;}
+  .logo{font-size:30px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.18));}
+  h1{
+    font-size:clamp(30px,7vw,46px);font-weight:700;letter-spacing:-.03em;margin:0;line-height:1.02;
+    background:linear-gradient(120deg,var(--ink) 20%,var(--win1) 55%,var(--accent) 90%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .tagline{color:var(--muted);font-size:15px;margin:10px 0 0;font-weight:400;}
+
+  .card{
+    background:var(--card);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:18px;box-shadow:var(--shadow);
+  }
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 7px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;}
+  input{
+    width:100%;font-size:16px;padding:13px 15px;border:1px solid var(--line);border-radius:13px;
+    background:var(--card-solid);color:var(--ink);margin-bottom:16px;font-family:inherit;transition:border-color .15s,box-shadow .15s;
+  }
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(10,132,255,.15);}
+  button{
+    font-family:inherit;font-size:16px;font-weight:600;padding:14px 22px;border:none;border-radius:13px;
+    background:linear-gradient(120deg,var(--accent),var(--win1));color:#fff;cursor:pointer;width:100%;
+    transition:transform .12s,box-shadow .2s,opacity .15s;box-shadow:0 6px 20px rgba(10,132,255,.35);
+  }
+  button:hover{box-shadow:0 8px 26px rgba(120,80,255,.45);}
+  button:active{transform:scale(.97);}
+  button:disabled{opacity:.55;cursor:default;box-shadow:none;}
+  .err{color:#ff453a;font-size:13px;margin:-9px 0 12px;min-height:0;font-weight:500;}
+
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:2px;}
+  .cell{
+    position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:var(--cell-radius);
+    background:var(--card-solid);display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:6px;font-size:11px;font-weight:600;cursor:pointer;line-height:1.16;letter-spacing:-.01em;
+    user-select:none;overflow:hidden;hyphens:auto;
+    transition:transform .16s cubic-bezier(.34,1.56,.64,1),background .2s,border-color .2s,color .2s,box-shadow .2s;
+  }
+  .cell:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.10);}
+  .cell:active{transform:scale(.92);}
+  .cell.hit{
+    background:linear-gradient(135deg,var(--hit-bg),transparent);border-color:var(--hit);color:var(--hit);
+    box-shadow:inset 0 0 0 1px var(--hit),0 4px 14px rgba(18,166,122,.22);
+  }
+  .cell.hit::after{
+    content:"✓";position:absolute;top:5px;right:6px;font-size:10px;font-weight:800;opacity:.9;
+  }
+  .cell.pop{animation:pop .42s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.14);}100%{transform:scale(1);}}
+  .cell.winline{
+    border-color:transparent;color:#fff;
+    background:linear-gradient(135deg,var(--win1),var(--win2));
+    box-shadow:0 6px 20px rgba(120,80,255,.5);animation:glow 1.6s ease-in-out infinite;
+  }
+  .cell.winline::after{color:#fff;opacity:1;}
+  @keyframes glow{0%,100%{box-shadow:0 6px 20px rgba(120,80,255,.45);}50%{box-shadow:0 8px 30px rgba(10,132,255,.7);}}
+
+  .banner{
+    position:relative;overflow:hidden;color:#fff;border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;
+    font-size:17px;font-weight:600;display:flex;align-items:center;gap:12px;
+    background:linear-gradient(120deg,var(--win1),var(--win2));box-shadow:0 10px 34px rgba(120,80,255,.5);
+    animation:bannerIn .5s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes bannerIn{from{opacity:0;transform:translateY(-10px) scale(.98);}to{opacity:1;transform:none;}}
+  .banner .cup{font-size:26px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3));}
+  .banner::before{
+    content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+    transform:translateX(-120%);animation:sheen 2.6s ease-in-out infinite;
+  }
+  @keyframes sheen{0%{transform:translateX(-120%);}60%,100%{transform:translateX(120%);}}
+
+  .who{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .who .name{font-weight:700;font-size:19px;letter-spacing:-.02em;}
+  .who .cnt{color:var(--muted);font-size:13px;font-weight:600;
+    background:var(--card-solid);border:1px solid var(--line);padding:5px 11px;border-radius:999px;}
+
+  .board h2{font-size:12px;color:var(--muted);font-weight:700;margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:11px 4px;border-bottom:.5px solid var(--line);font-size:15px;}
+  .row:last-of-type{border-bottom:none;}
+  .row .name{font-weight:500;}
+  .row .n{color:var(--muted);font-size:12px;font-weight:600;
+    background:var(--bg2);padding:4px 10px;border-radius:999px;border:1px solid var(--line);}
+  .row.winner{background:linear-gradient(90deg,rgba(120,80,255,.12),transparent);border-radius:11px;margin:0 -6px;padding-left:10px;padding-right:10px;}
+  .row.winner .name{color:var(--win1);font-weight:700;}
+  .row.winner .n{background:linear-gradient(120deg,var(--win1),var(--win2));color:#fff;border:none;}
+
+  .hint{color:var(--muted);font-size:12px;text-align:center;margin-top:16px;line-height:1.5;}
+  .loading{text-align:center;color:var(--muted);padding:60px 20px;font-size:15px;}
+  .status{font-size:11px;text-align:center;margin-top:10px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--hit);box-shadow:0 0 8px var(--hit);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
   .status.ok{color:var(--hit);}
-  .status.bad{color:#e24b4a;}
 </style>
 </head>
 <body>
@@ -89,7 +159,6 @@ try{
 }
 
 // ---- Term pool: Apple Event classics + Sept 2026 rumor mill -----------------
-// COMMON = near-guaranteed keynote boilerplate (each card draws 8).
 const COMMON = [
   "“Incredible”","“Magical”","“The best … ever”","“Only Apple”",
   "“Pro” said 10+ times","New A-series chip","“Our most powerful … ever”","Camera upgrade",
@@ -98,7 +167,6 @@ const COMMON = [
   "“Seamless”","Apple Intelligence","Giant number on a slide","Battery-life claim",
   "“Only on iPhone”","Slow-mo product beauty shot","“Available in the coming weeks”","Aerial shot of Apple Park"
 ];
-// RARE = juicier, event-specific and 2026-rumor bait (each card draws 17).
 const RARE = [
   "“One more thing”","Foldable iPhone Ultra unveiled","“iPhone Ultra” name confirmed","Book-style fold shown",
   "“Virtually crease-free” display","Titanium frame mentioned","Touch ID in power button","A20 Pro chip",
@@ -131,17 +199,36 @@ const LINES=(()=>{const L=[];
   L.push([0,6,12,18,24]);L.push([4,8,12,16,20]);return L;})();
 function winningLine(marks){for(const line of LINES){if(line.every(i=>marks[i]))return line;}return null;}
 
-// ---- Firebase key from email (only allowed chars) --------------------------
+// ---- Firebase key from email -----------------------------------------------
 function keyFor(email){return btoa(unescape(encodeURIComponent(email.toLowerCase().trim())))
   .replace(/[.#$/\[\]=+]/g,"_");}
 
 // ---- State -----------------------------------------------------------------
-let me=null, myCard=[], myMarks=Array(25).fill(false), players={};
+let me=null, myCard=[], myMarks=Array(25).fill(false), players={}, lastToggled=-1, hadWin=false;
 
 const app=document.getElementById("app");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-// ---- live subscription to all players --------------------------------------
+// ---- confetti burst (winner only) ------------------------------------------
+function confetti(){
+  const colors=["#bf5af2","#0a84ff","#30d59a","#ff9f0a","#ff375f","#64d2ff"];
+  const n=90;
+  for(let i=0;i<n;i++){
+    const p=document.createElement("div");
+    const size=6+Math.random()*8;
+    p.style.cssText=`position:fixed;top:-20px;left:${Math.random()*100}vw;width:${size}px;height:${size*0.5}px;
+      background:${colors[i%colors.length]};border-radius:2px;z-index:9999;pointer-events:none;
+      opacity:.95;transform:rotate(${Math.random()*360}deg);`;
+    document.body.appendChild(p);
+    const dur=2200+Math.random()*1600, drift=(Math.random()-.5)*260;
+    p.animate([
+      {transform:`translate(0,0) rotate(0deg)`,opacity:1},
+      {transform:`translate(${drift}px,${window.innerHeight+60}px) rotate(${540+Math.random()*540}deg)`,opacity:.9}
+    ],{duration:dur,easing:"cubic-bezier(.2,.6,.4,1)"}).onfinish=()=>p.remove();
+  }
+}
+
+// ---- live subscription -----------------------------------------------------
 function subscribe(){
   onValue(ref(db,`rooms/${ROOM}/players`),snap=>{
     players=snap.val()||{};
@@ -152,8 +239,11 @@ function subscribe(){
 // ---- join view -------------------------------------------------------------
 function renderJoin(errMsg){
   app.innerHTML=`
-    <h1>Apple Event Bingo</h1>
-    <p class="sub">Sign in to get your own bingo card.</p>
+    <div class="masthead">
+      <div class="logo"></div>
+      <h1>Event Bingo</h1>
+      <p class="tagline">Surprise &amp; Shine · September 9</p>
+    </div>
     <div class="card">
       <label>Nickname</label>
       <input id="nick" maxlength="20" placeholder="e.g. Kevin K." autocomplete="off">
@@ -184,6 +274,7 @@ async function join(){
   myCard=buildCard(mail);
   const existing=players[id];
   myMarks=(existing&&Array.isArray(existing.marks)&&existing.marks.length===25)?existing.marks:Array(25).fill(false);
+  hadWin=!!winningLine(myMarks);
   try{
     localStorage.setItem("apple-bingo-mail",mail);
     localStorage.setItem("apple-bingo-nick",nick);
@@ -208,8 +299,9 @@ async function persist(){
 
 function toggle(i){
   myMarks[i]=!myMarks[i];
-  renderGame();      // instant local feedback
-  persist();         // then sync
+  lastToggled=i;
+  renderGame();
+  persist();
 }
 
 function renderGame(){
@@ -218,27 +310,37 @@ function renderGame(){
   const winners=list.filter(p=>p.won).sort((a,b)=>(a.wonTs||0)-(b.wonTs||0));
   const board=list.sort((a,b)=>(b.won-a.won)||((a.wonTs||9e15)-(b.wonTs||9e15))||(b.count-a.count));
 
+  // trigger confetti once, when *I* first complete a line
+  if(line&&!hadWin){hadWin=true;confetti();}
+  if(!line)hadWin=false;
+
   let bannerHtml="";
   if(winners.length){
     const first=winners[0];
-    bannerHtml=`<div class="banner"><span>🎉</span><span>${esc(first.nick)} got BINGO!${
+    bannerHtml=`<div class="banner"><span class="cup">🏆</span><span>${esc(first.nick)} got BINGO!${
       first.id===me.id?" That’s you.":""}</span></div>`;
   }
 
   const cells=myCard.map((t,i)=>{
     const hit=myMarks[i]?"hit":"";
     const winCell=line&&line.includes(i)?"winline":"";
-    return `<div class="cell ${hit} ${winCell}" data-i="${i}">${esc(t)}</div>`;
+    const pop=(i===lastToggled&&myMarks[i])?"pop":"";
+    return `<div class="cell ${hit} ${winCell} ${pop}" data-i="${i}">${esc(t)}</div>`;
   }).join("");
+  lastToggled=-1;
 
-  const rows=board.map(p=>`
+  const rows=board.map((p,idx)=>`
     <div class="row ${p.won?"winner":""}">
-      <span class="name">${esc(p.nick)}${p.id===me.id?" (you)":""}</span>
+      <span class="name">${p.won?"🏆 ":""}${esc(p.nick)}${p.id===me.id?" (you)":""}</span>
       <span class="n">${p.won?"BINGO":(p.count||0)+"/25"}</span>
     </div>`).join("");
 
   app.innerHTML=`
-    <h1>Apple Event Bingo</h1>
+    <div class="masthead">
+      <div class="logo"></div>
+      <h1>Event Bingo</h1>
+      <p class="tagline">Surprise &amp; Shine · September 9</p>
+    </div>
     ${bannerHtml}
     <div class="card">
       <div class="who">
@@ -251,7 +353,7 @@ function renderGame(){
     <div class="card board">
       <h2>Who’s playing (${board.length})</h2>
       ${rows||'<p class="hint">Nobody else here yet.</p>'}
-      <p class="status ok">● Live connected</p>
+      <p class="status ok"><span class="dot"></span>Live connected</p>
     </div>`;
 
   app.querySelectorAll(".cell").forEach(c=>c.onclick=()=>toggle(+c.dataset.i));
