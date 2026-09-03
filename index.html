@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apple Event Bullshit Bingo</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --card:#ffffff; --ink:#1d1d1f; --muted:#6e6e73;
+    --line:#d2d2d7; --accent:#0071e3; --hit:#1d9e75; --hit-bg:#e1f5ee;
+    --win:#bf5af2; --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#000; --card:#1c1c1e; --ink:#f5f5f7; --muted:#98989d;
+           --line:#38383a; --hit-bg:#0f2e26; }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding:20px;line-height:1.4;}
+  .wrap{max-width:640px;margin:0 auto;}
+  h1{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0 0 2px;}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 22px;}
+  .card{background:var(--card);border:.5px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:18px;}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;}
+  input{width:100%;font-size:16px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;
+    background:var(--bg);color:var(--ink);margin-bottom:14px;font-family:inherit;}
+  input:focus{outline:none;border-color:var(--accent);}
+  button{font-family:inherit;font-size:16px;font-weight:500;padding:11px 20px;border:none;border-radius:10px;
+    background:var(--accent);color:#fff;cursor:pointer;width:100%;transition:opacity .15s;}
+  button:active{opacity:.7;}
+  button:disabled{opacity:.5;cursor:default;}
+  button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line);width:auto;padding:8px 16px;font-size:14px;}
+  .err{color:#e24b4a;font-size:13px;margin:-8px 0 12px;min-height:0;}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:4px;}
+  .cell{aspect-ratio:1;border:1px solid var(--line);border-radius:11px;background:var(--card);
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:6px;font-size:11.5px;font-weight:500;cursor:pointer;line-height:1.15;
+    transition:background .12s,border-color .12s,transform .08s;user-select:none;overflow:hidden;hyphens:auto;}
+  .cell:active{transform:scale(.95);}
+  .cell.hit{background:var(--hit-bg);border-color:var(--hit);color:var(--hit);}
+  .cell.winline{border-color:var(--win);border-width:2px;}
+  .banner{background:var(--win);color:#fff;border-radius:var(--radius);padding:16px 20px;margin-bottom:18px;
+    font-size:16px;font-weight:500;display:flex;align-items:center;gap:10px;}
+  .who{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .who .name{font-weight:600;font-size:17px;}
+  .who .cnt{color:var(--muted);font-size:13px;}
+  .board{margin-top:22px;}
+  .board h2{font-size:14px;color:var(--muted);font-weight:500;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:.5px solid var(--line);font-size:15px;}
+  .row:last-child{border-bottom:none;}
+  .row .n{color:var(--muted);font-size:13px;}
+  .row.winner .name{color:var(--win);font-weight:600;}
+  .hint{color:var(--muted);font-size:12px;text-align:center;margin-top:14px;}
+  .loading{text-align:center;color:var(--muted);padding:30px;}
+  .status{font-size:11px;text-align:center;margin-top:8px;}
+  .status.ok{color:var(--hit);}
+  .status.bad{color:#e24b4a;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading">Verbinde mit Server…</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ---- Firebase-Konfiguration ------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyDoeYb42OgKETNxHDNqgb5iQdPWH_akvOM",
+  authDomain: "apple-bingo-fedea.firebaseapp.com",
+  databaseURL: "https://apple-bingo-fedea-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "apple-bingo-fedea",
+  storageBucket: "apple-bingo-fedea.firebasestorage.app",
+  messagingSenderId: "218484756850",
+  appId: "1:218484756850:web:f633cc3c18ea5ed3cecdeb"
+};
+const ROOM = "event-2026-09"; // alle Spieler eines Abends teilen sich diesen Raum
+
+let db;
+try{
+  const fbApp = initializeApp(firebaseConfig);
+  db = getDatabase(fbApp);
+}catch(e){
+  document.getElementById("app").innerHTML =
+    '<div class="loading">Firebase-Verbindung fehlgeschlagen. Bitte Seite neu laden.</div>';
+}
+
+// ---- Begriffs-Pool: Apple-Event-Klassiker ----------------------------------
+const COMMON = [
+  "„Unglaublich“","„Magisch“","„Das beste … aller Zeiten“","„Nur bei Apple“",
+  "„Pro“ (mind. 10×)","Neuer A-Chip","„Schnellste je gebaute …“","Kamera-Upgrade",
+  "„Umweltfreundlich“ / CO₂","„Ein Wort: …“","Craig grinst","Tim sagt „Good morning“",
+  "„Wir freuen uns riesig“","Dünner & leichter","„Verfügbar ab …“","Neue Farbe vorgestellt",
+  "„Nahtlos“ / „seamless“","Apple Intelligence","Riesige Zahl auf Slide","Batterie-Laufzeit-Claim"
+];
+const RARE = [
+  "„One more thing“","Vision Pro erwähnt","Standing Ovation im Video","Drohnenaufnahme Apple Park",
+  "Neuer Preis HÖHER als erwartet","„Revolutionär“","Slow-Mo-Produktdreh","Promi im Werbespot",
+  "Zoll-Diagonale genannt","„Titan“","Vergleich mit Vorjahr in %","Health-Feature",
+  "USB-C erwähnt","„Für Entwickler“","Game-Demo läuft ruckelig","„Made for Apple Intelligence“",
+  "Datenschutz-Folie","„Bis zu …× schneller“","Recycling-Roboter „Daisy“","Neues Uhren-Zifferblatt",
+  "Zubehör teurer als gedacht","„Weltweit ab Freitag“","Musik-Act am Ende","Applaus für die Kamera",
+  "„Das ist erst der Anfang“","Emoji / Genmoji","Satelliten-Feature","„Studio“-irgendwas"
+];
+
+// ---- deterministischer RNG aus E-Mail --------------------------------------
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function buildCard(email){
+  const rng=mulberry32(hashStr(email.toLowerCase().trim())||1);
+  const pick=(arr,n)=>{const c=[...arr];for(let i=c.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[c[i],c[j]]=[c[j],c[i]];}return c.slice(0,n);};
+  let cells=[...pick(COMMON,8),...pick(RARE,17)];
+  for(let i=cells.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}
+  return cells.slice(0,25);
+}
+
+// ---- Gewinnlinien (Reihe / Spalte / Diagonale, KEIN Free Space) ------------
+const LINES=(()=>{const L=[];
+  for(let r=0;r<5;r++)L.push([0,1,2,3,4].map(c=>r*5+c));
+  for(let c=0;c<5;c++)L.push([0,1,2,3,4].map(r=>r*5+c));
+  L.push([0,6,12,18,24]);L.push([4,8,12,16,20]);return L;})();
+function winningLine(marks){for(const line of LINES){if(line.every(i=>marks[i]))return line;}return null;}
+
+// ---- Firebase-Key aus E-Mail (nur erlaubte Zeichen) ------------------------
+function keyFor(email){return btoa(unescape(encodeURIComponent(email.toLowerCase().trim())))
+  .replace(/[.#$/\[\]=+]/g,"_");}
+
+// ---- State -----------------------------------------------------------------
+let me=null, myCard=[], myMarks=Array(25).fill(false), players={};
+
+const app=document.getElementById("app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---- Live-Abo auf alle Spieler ---------------------------------------------
+function subscribe(){
+  onValue(ref(db,`rooms/${ROOM}/players`),snap=>{
+    players=snap.val()||{};
+    if(me)renderGame();
+  });
+}
+
+// ---- Anmelde-Ansicht -------------------------------------------------------
+function renderJoin(errMsg){
+  app.innerHTML=`
+    <h1>Apple Event Bingo</h1>
+    <p class="sub">Melde dich an — du bekommst deinen eigenen Bingo-Bogen.</p>
+    <div class="card">
+      <label>Spitzname</label>
+      <input id="nick" maxlength="20" placeholder="z.B. Kevin K." autocomplete="off">
+      <label>E-Mail</label>
+      <input id="mail" type="email" placeholder="name@firma.de" autocomplete="off">
+      <div class="err" id="e">${errMsg?esc(errMsg):""}</div>
+      <button id="go">Loslegen</button>
+    </div>
+    <p class="hint">Dein Bogen wird aus deiner E-Mail erzeugt — jeder bekommt eine andere Kombination.</p>`;
+  document.getElementById("go").onclick=join;
+  document.getElementById("nick").oninput=document.getElementById("mail").oninput=()=>document.getElementById("e").textContent="";
+  try{
+    const savedMail=localStorage.getItem("apple-bingo-mail");
+    const savedNick=localStorage.getItem("apple-bingo-nick");
+    if(savedMail)document.getElementById("mail").value=savedMail;
+    if(savedNick)document.getElementById("nick").value=savedNick;
+  }catch(e){}
+}
+
+async function join(){
+  const nick=document.getElementById("nick").value.trim();
+  const mail=document.getElementById("mail").value.trim();
+  if(!nick){document.getElementById("e").textContent="Bitte einen Spitznamen eingeben.";return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){document.getElementById("e").textContent="Bitte eine gültige E-Mail eingeben.";return;}
+  const btn=document.getElementById("go");btn.disabled=true;btn.textContent="Verbinde…";
+  const id=keyFor(mail);
+  me={id,nick,mail};
+  myCard=buildCard(mail);
+  const existing=players[id];
+  myMarks=(existing&&Array.isArray(existing.marks)&&existing.marks.length===25)?existing.marks:Array(25).fill(false);
+  try{
+    localStorage.setItem("apple-bingo-mail",mail);
+    localStorage.setItem("apple-bingo-nick",nick);
+  }catch(e){}
+  await persist();
+  renderGame();
+}
+
+async function persist(){
+  const line=winningLine(myMarks);
+  const prev=players[me.id]||{};
+  try{
+    await set(ref(db,`rooms/${ROOM}/players/${me.id}`),{
+      nick:me.nick,
+      marks:myMarks,
+      count:myMarks.filter(Boolean).length,
+      won:!!line,
+      wonTs: line ? (prev.wonTs || Date.now()) : null
+    });
+  }catch(e){}
+}
+
+function toggle(i){
+  myMarks[i]=!myMarks[i];
+  renderGame();      // sofortiges lokales Feedback
+  persist();         // dann synchronisieren
+}
+
+function renderGame(){
+  const line=winningLine(myMarks);
+  const list=Object.entries(players).map(([id,p])=>({id,...p}));
+  const winners=list.filter(p=>p.won).sort((a,b)=>(a.wonTs||0)-(b.wonTs||0));
+  const board=list.sort((a,b)=>(b.won-a.won)||((a.wonTs||9e15)-(b.wonTs||9e15))||(b.count-a.count));
+
+  let bannerHtml="";
+  if(winners.length){
+    const first=winners[0];
+    bannerHtml=`<div class="banner"><span>🎉</span><span>${esc(first.nick)} hat Bingo!${
+      first.id===me.id?" Das bist du.":""}</span></div>`;
+  }
+
+  const cells=myCard.map((t,i)=>{
+    const hit=myMarks[i]?"hit":"";
+    const winCell=line&&line.includes(i)?"winline":"";
+    return `<div class="cell ${hit} ${winCell}" data-i="${i}">${esc(t)}</div>`;
+  }).join("");
+
+  const rows=board.map(p=>`
+    <div class="row ${p.won?"winner":""}">
+      <span class="name">${esc(p.nick)}${p.id===me.id?" (du)":""}</span>
+      <span class="n">${p.won?"BINGO":(p.count||0)+"/25"}</span>
+    </div>`).join("");
+
+  app.innerHTML=`
+    <h1>Apple Event Bingo</h1>
+    ${bannerHtml}
+    <div class="card">
+      <div class="who">
+        <span class="name">${esc(me.nick)}</span>
+        <span class="cnt">${myMarks.filter(Boolean).length}/25 markiert</span>
+      </div>
+      <div class="grid">${cells}</div>
+      <p class="hint">Tippe einen Begriff an, sobald er im Event fällt.</p>
+    </div>
+    <div class="card board">
+      <h2>Wer ist dabei (${board.length})</h2>
+      ${rows||'<p class="hint">Noch niemand sonst da.</p>'}
+      <p class="status ok">● Live verbunden</p>
+    </div>`;
+
+  app.querySelectorAll(".cell").forEach(c=>c.onclick=()=>toggle(+c.dataset.i));
+}
+
+// ---- Boot ------------------------------------------------------------------
+if(db){
+  subscribe();
+  renderJoin();
+}
+</script>
+</body>
+</html>
