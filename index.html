@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,7 +59,7 @@
 </head>
 <body>
 <div class="wrap" id="app">
-  <div class="loading">Verbinde mit Server…</div>
+  <div class="loading">Connecting…</div>
 </div>
 
 <script type="module">
@@ -67,7 +67,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getDatabase, ref, onValue, set }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ---- Firebase-Konfiguration ------------------------------------------------
+// ---- Firebase configuration ------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDoeYb42OgKETNxHDNqgb5iQdPWH_akvOM",
   authDomain: "apple-bingo-fedea.firebaseapp.com",
@@ -77,7 +77,7 @@ const firebaseConfig = {
   messagingSenderId: "218484756850",
   appId: "1:218484756850:web:f633cc3c18ea5ed3cecdeb"
 };
-const ROOM = "event-2026-09"; // alle Spieler eines Abends teilen sich diesen Raum
+const ROOM = "event-2026-09"; // everyone at one watch party shares this room
 
 let db;
 try{
@@ -85,28 +85,35 @@ try{
   db = getDatabase(fbApp);
 }catch(e){
   document.getElementById("app").innerHTML =
-    '<div class="loading">Firebase-Verbindung fehlgeschlagen. Bitte Seite neu laden.</div>';
+    '<div class="loading">Could not connect to Firebase. Please reload the page.</div>';
 }
 
-// ---- Begriffs-Pool: Apple-Event-Klassiker ----------------------------------
+// ---- Term pool: Apple Event classics + Sept 2026 rumor mill -----------------
+// COMMON = near-guaranteed keynote boilerplate (each card draws 8).
 const COMMON = [
-  "„Unglaublich“","„Magisch“","„Das beste … aller Zeiten“","„Nur bei Apple“",
-  "„Pro“ (mind. 10×)","Neuer A-Chip","„Schnellste je gebaute …“","Kamera-Upgrade",
-  "„Umweltfreundlich“ / CO₂","„Ein Wort: …“","Craig grinst","Tim sagt „Good morning“",
-  "„Wir freuen uns riesig“","Dünner & leichter","„Verfügbar ab …“","Neue Farbe vorgestellt",
-  "„Nahtlos“ / „seamless“","Apple Intelligence","Riesige Zahl auf Slide","Batterie-Laufzeit-Claim"
+  "“Incredible”","“Magical”","“The best … ever”","“Only Apple”",
+  "“Pro” said 10+ times","New A-series chip","“Our most powerful … ever”","Camera upgrade",
+  "“Carbon neutral” / environment","“One word: …”","Craig grins","Ternus says “Good morning”",
+  "“We can’t wait”","“Thinner and lighter”","“Available starting …”","New color revealed",
+  "“Seamless”","Apple Intelligence","Giant number on a slide","Battery-life claim",
+  "“Only on iPhone”","Slow-mo product beauty shot","“Available in the coming weeks”","Aerial shot of Apple Park"
 ];
+// RARE = juicier, event-specific and 2026-rumor bait (each card draws 17).
 const RARE = [
-  "„One more thing“","Vision Pro erwähnt","Standing Ovation im Video","Drohnenaufnahme Apple Park",
-  "Neuer Preis HÖHER als erwartet","„Revolutionär“","Slow-Mo-Produktdreh","Promi im Werbespot",
-  "Zoll-Diagonale genannt","„Titan“","Vergleich mit Vorjahr in %","Health-Feature",
-  "USB-C erwähnt","„Für Entwickler“","Game-Demo läuft ruckelig","„Made for Apple Intelligence“",
-  "Datenschutz-Folie","„Bis zu …× schneller“","Recycling-Roboter „Daisy“","Neues Uhren-Zifferblatt",
-  "Zubehör teurer als gedacht","„Weltweit ab Freitag“","Musik-Act am Ende","Applaus für die Kamera",
-  "„Das ist erst der Anfang“","Emoji / Genmoji","Satelliten-Feature","„Studio“-irgendwas"
+  "“One more thing”","Foldable iPhone Ultra unveiled","“iPhone Ultra” name confirmed","Book-style fold shown",
+  "“Virtually crease-free” display","Titanium frame mentioned","Touch ID in power button","A20 Pro chip",
+  "First 2-nanometer chip","C2 modem mentioned","12GB of RAM","Variable-aperture camera",
+  "Smaller Dynamic Island","No standard iPhone 18 this time","No iPhone Air mentioned","iPhone 18 Pro Max",
+  "Price higher than last year","Ultra priced over $2,000","“Limited availability at launch”","Dark cherry color",
+  "Apple Watch Series 12","Apple Watch Ultra 4","AirPods 5","New MacBook Pro (M-series)",
+  "New iPad shown","Ternus: first keynote as CEO","Tim Cook thanked / mentioned","“Surprise and shine” callback",
+  "Standing ovation in a video","Celebrity in the ad reel","Health feature","Satellite feature",
+  "Screen-time / privacy slide","“Up to …× faster” comparison","Genmoji / emoji moment","Developer shout-out",
+  "Live demo stutters","Recycling robot “Daisy”","New watch face","Accessory pricier than expected",
+  "“Available this Friday”","Musical act at the end","Applause for the camera","“This is just the beginning”"
 ];
 
-// ---- deterministischer RNG aus E-Mail --------------------------------------
+// ---- deterministic RNG from email ------------------------------------------
 function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function buildCard(email){
@@ -117,14 +124,14 @@ function buildCard(email){
   return cells.slice(0,25);
 }
 
-// ---- Gewinnlinien (Reihe / Spalte / Diagonale, KEIN Free Space) ------------
+// ---- winning lines (row / column / diagonal, NO free space) ----------------
 const LINES=(()=>{const L=[];
   for(let r=0;r<5;r++)L.push([0,1,2,3,4].map(c=>r*5+c));
   for(let c=0;c<5;c++)L.push([0,1,2,3,4].map(r=>r*5+c));
   L.push([0,6,12,18,24]);L.push([4,8,12,16,20]);return L;})();
 function winningLine(marks){for(const line of LINES){if(line.every(i=>marks[i]))return line;}return null;}
 
-// ---- Firebase-Key aus E-Mail (nur erlaubte Zeichen) ------------------------
+// ---- Firebase key from email (only allowed chars) --------------------------
 function keyFor(email){return btoa(unescape(encodeURIComponent(email.toLowerCase().trim())))
   .replace(/[.#$/\[\]=+]/g,"_");}
 
@@ -134,7 +141,7 @@ let me=null, myCard=[], myMarks=Array(25).fill(false), players={};
 const app=document.getElementById("app");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-// ---- Live-Abo auf alle Spieler ---------------------------------------------
+// ---- live subscription to all players --------------------------------------
 function subscribe(){
   onValue(ref(db,`rooms/${ROOM}/players`),snap=>{
     players=snap.val()||{};
@@ -142,20 +149,20 @@ function subscribe(){
   });
 }
 
-// ---- Anmelde-Ansicht -------------------------------------------------------
+// ---- join view -------------------------------------------------------------
 function renderJoin(errMsg){
   app.innerHTML=`
     <h1>Apple Event Bingo</h1>
-    <p class="sub">Melde dich an — du bekommst deinen eigenen Bingo-Bogen.</p>
+    <p class="sub">Sign in to get your own bingo card.</p>
     <div class="card">
-      <label>Spitzname</label>
-      <input id="nick" maxlength="20" placeholder="z.B. Kevin K." autocomplete="off">
-      <label>E-Mail</label>
-      <input id="mail" type="email" placeholder="name@firma.de" autocomplete="off">
+      <label>Nickname</label>
+      <input id="nick" maxlength="20" placeholder="e.g. Kevin K." autocomplete="off">
+      <label>Email</label>
+      <input id="mail" type="email" placeholder="name@company.com" autocomplete="off">
       <div class="err" id="e">${errMsg?esc(errMsg):""}</div>
-      <button id="go">Loslegen</button>
+      <button id="go">Let’s go</button>
     </div>
-    <p class="hint">Dein Bogen wird aus deiner E-Mail erzeugt — jeder bekommt eine andere Kombination.</p>`;
+    <p class="hint">Your card is generated from your email — everyone gets a different mix.</p>`;
   document.getElementById("go").onclick=join;
   document.getElementById("nick").oninput=document.getElementById("mail").oninput=()=>document.getElementById("e").textContent="";
   try{
@@ -169,9 +176,9 @@ function renderJoin(errMsg){
 async function join(){
   const nick=document.getElementById("nick").value.trim();
   const mail=document.getElementById("mail").value.trim();
-  if(!nick){document.getElementById("e").textContent="Bitte einen Spitznamen eingeben.";return;}
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){document.getElementById("e").textContent="Bitte eine gültige E-Mail eingeben.";return;}
-  const btn=document.getElementById("go");btn.disabled=true;btn.textContent="Verbinde…";
+  if(!nick){document.getElementById("e").textContent="Please enter a nickname.";return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){document.getElementById("e").textContent="Please enter a valid email.";return;}
+  const btn=document.getElementById("go");btn.disabled=true;btn.textContent="Connecting…";
   const id=keyFor(mail);
   me={id,nick,mail};
   myCard=buildCard(mail);
@@ -201,8 +208,8 @@ async function persist(){
 
 function toggle(i){
   myMarks[i]=!myMarks[i];
-  renderGame();      // sofortiges lokales Feedback
-  persist();         // dann synchronisieren
+  renderGame();      // instant local feedback
+  persist();         // then sync
 }
 
 function renderGame(){
@@ -214,8 +221,8 @@ function renderGame(){
   let bannerHtml="";
   if(winners.length){
     const first=winners[0];
-    bannerHtml=`<div class="banner"><span>🎉</span><span>${esc(first.nick)} hat Bingo!${
-      first.id===me.id?" Das bist du.":""}</span></div>`;
+    bannerHtml=`<div class="banner"><span>🎉</span><span>${esc(first.nick)} got BINGO!${
+      first.id===me.id?" That’s you.":""}</span></div>`;
   }
 
   const cells=myCard.map((t,i)=>{
@@ -226,7 +233,7 @@ function renderGame(){
 
   const rows=board.map(p=>`
     <div class="row ${p.won?"winner":""}">
-      <span class="name">${esc(p.nick)}${p.id===me.id?" (du)":""}</span>
+      <span class="name">${esc(p.nick)}${p.id===me.id?" (you)":""}</span>
       <span class="n">${p.won?"BINGO":(p.count||0)+"/25"}</span>
     </div>`).join("");
 
@@ -236,21 +243,21 @@ function renderGame(){
     <div class="card">
       <div class="who">
         <span class="name">${esc(me.nick)}</span>
-        <span class="cnt">${myMarks.filter(Boolean).length}/25 markiert</span>
+        <span class="cnt">${myMarks.filter(Boolean).length}/25 marked</span>
       </div>
       <div class="grid">${cells}</div>
-      <p class="hint">Tippe einen Begriff an, sobald er im Event fällt.</p>
+      <p class="hint">Tap a term the moment it happens on stage.</p>
     </div>
     <div class="card board">
-      <h2>Wer ist dabei (${board.length})</h2>
-      ${rows||'<p class="hint">Noch niemand sonst da.</p>'}
-      <p class="status ok">● Live verbunden</p>
+      <h2>Who’s playing (${board.length})</h2>
+      ${rows||'<p class="hint">Nobody else here yet.</p>'}
+      <p class="status ok">● Live connected</p>
     </div>`;
 
   app.querySelectorAll(".cell").forEach(c=>c.onclick=()=>toggle(+c.dataset.i));
 }
 
-// ---- Boot ------------------------------------------------------------------
+// ---- boot ------------------------------------------------------------------
 if(db){
   subscribe();
   renderJoin();
